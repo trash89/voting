@@ -5,6 +5,7 @@ import GetContract from "./GetContract";
 import GetStatusIcon from "./GetStatusIcon";
 import GetBallot from "./GetBallot";
 import GetProposals from "./GetProposals";
+import GetVoter from "./GetVoter";
 import ShowError from "./ShowError";
 
 export {
@@ -14,6 +15,7 @@ export {
   GetContract,
   GetBallot,
   GetProposals,
+  GetVoter,
   SupportedNetworks,
   ShowError,
 };

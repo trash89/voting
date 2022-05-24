@@ -31,13 +31,6 @@ const MenuAppBar = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Ballot
           </Typography>
-          <NavLink
-            style={{ flexGrow: 1 }}
-            to="/ballot"
-            className={({ isActive }) => (isActive ? "link active" : "link")}
-          >
-            Ballot
-          </NavLink>
           <ConnectButton />
         </Toolbar>
       </AppBar>

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.14;
-import "./console.sol";
+
 
 /// @title Voting with delegation.
 contract Ballot {
@@ -31,7 +31,6 @@ contract Ballot {
 
     /// Create a new ballot to choose one of `proposalNames`.
     constructor(bytes32[] memory proposalNames) {
-        console.log("constructor() called");
         chairperson = msg.sender;
         voters[chairperson].weight = 1;
 
@@ -43,11 +42,7 @@ contract Ballot {
             // Proposal object and `proposals.push(...)`
             // appends it to the end of `proposals`.
             proposals.push(Proposal({name: proposalNames[i], voteCount: 0}));
-            console.log("proposalNames[%d]=", i);
-            console.logBytes32(proposalNames[i]);
         }
-        console.log("constructor() chairperson=%s", chairperson);
-        console.log("constructor() passed");
     }
 
     // Give `voter` the right to vote on this ballot.
@@ -100,7 +95,7 @@ contract Ballot {
         Voter storage delegate_ = voters[to];
 
         // Voters cannot delegate to wallets that cannot vote.
-        require(delegate_.weight >= 1);
+        require(delegate_.weight >= 1,"Voters cannot delegate to wallets that cannot vote.");
         sender.voted = true;
         sender.delegate = to;
         if (delegate_.voted) {
@@ -135,11 +130,6 @@ contract Ballot {
         uint256 winningVoteCount = 0;
         for (uint256 p = 0; p < proposals.length; p++) {
             if (proposals[p].voteCount > winningVoteCount) {
-                console.log(
-                    "proposals[%d].voteCount=",
-                    p,
-                    proposals[p].voteCount
-                );
                 winningVoteCount = proposals[p].voteCount;
                 winningProposal_ = p;
             }

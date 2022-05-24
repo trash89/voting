@@ -23,5 +23,6 @@ export const formatBalance = (balance) =>
   );
 
 export const addressNotZero = (address) => {
+  if (!utils.isAddress(address)) return false;
   return utils.getAddress(address) !== constants.AddressZero;
 };

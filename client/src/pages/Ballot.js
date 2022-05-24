@@ -1,4 +1,4 @@
-import Grid from "@mui/material/Grid";
+import Container from "@mui/material/Container";
 import Paper from "@mui/material/Paper";
 
 import { useNetwork, useAccount } from "wagmi";
@@ -33,18 +33,14 @@ const Ballot = () => {
   return (
     <>
       {isMounted && (
-        <Grid container direction="row" padding={1} spacing={1}>
-          <Grid item>
-            <Paper elevation={4}>
-              <GetBallot
-                activeChain={activeChain}
-                contractAddress={contractAddress}
-                contractABI={contractABI}
-                account={account}
-              />
-            </Paper>
-          </Grid>
-        </Grid>
+        <Container component={Paper} maxWidth="sm" disableGutters={true}>
+          <GetBallot
+            activeChain={activeChain}
+            contractAddress={contractAddress}
+            contractABI={contractABI}
+            account={account}
+          />
+        </Container>
       )}
     </>
   );

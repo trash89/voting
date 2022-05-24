@@ -1,11 +1,10 @@
 from brownie import accounts, network, exceptions, Ballot
-from scripts.brownie.deploy import deployBallot
 from scripts.brownie.helpful_scripts import get_account, LOCAL_BLOCKCHAIN_ENVIRONMENTS
 import pytest
 
 
 def main():
-    ballot = deployBallot()
+    ballot = Ballot[-1]
     alice = get_account()
     if network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONMENTS:
         bob = get_account(index=1)
