@@ -21,8 +21,6 @@ networks:
     verify: False
   hh-local:
     verify: False
-  hh1-local:
-    verify: False
 dotenv: .env
 wallets:
   from_key: ${PRIVATE_KEY}

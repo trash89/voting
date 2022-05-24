@@ -1,5 +1,5 @@
 const fs = require("fs");
-const clientFolders = ["./client", "./client.wagmi"];
+const clientFolders = ["./client"];
 
 const frontEndMapFiles = clientFolders.map((folder) => {
   try {

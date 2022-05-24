@@ -1,6 +1,8 @@
 # Client Application for the Voting contract
 
-## client application on Hardhat network
+## client application on Rinkeby testnet
+
+https://votingfullstack.netlify.app/
 
 ![Voting webapp ](../voting_frontend.png)
 
@@ -12,7 +14,7 @@ To install the required packages.
 
 ### `configure .env`
 
-Configure .env file in the client folder
+Configure .env file in the client folder.
 An example of .env file :
 
 ```bash .env

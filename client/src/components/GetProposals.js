@@ -29,6 +29,7 @@ const GetProposal = ({
     data: proposal,
     isLoading: isLoadingProposal,
     isError: isErrorProposal,
+    isSuccess: isSuccessProposal,
     error: errorProposal,
   } = useContractRead(
     {
@@ -62,7 +63,8 @@ const GetProposal = ({
 
   const handleVote = (e) => {
     e.preventDefault();
-    writeVote({ args: [BigNumber.from(e.target.value)] });
+    console.log(e.currentTarget.value);
+    writeVote({ args: [BigNumber.from(e.currentTarget.value)] });
   };
   useEffect(() => {
     if (statusVote !== "loading") {
@@ -74,7 +76,7 @@ const GetProposal = ({
 
   return (
     <>
-      {isMounted && !isLoadingProposal && (
+      {isMounted && !isLoadingProposal && isSuccessProposal && (
         <TableRow key={idxProposal}>
           <TableCell align="left">{idxProposal.toString()}</TableCell>
           <TableCell align="left">{utils.toUtf8String(proposal[0])}</TableCell>

@@ -157,107 +157,116 @@ const GetBallot = ({ activeChain, contractAddress, contractABI, account }) => {
     setOpenSnack(false);
   };
 
-  if (isLoadingChairperson || isErrorChairperson || !chairperson)
+  if (!isMounted || isLoadingChairperson || isErrorChairperson || !chairperson)
     return <>Loading...</>;
   return (
     <>
-      {isMounted && (
-        <>
-          <Typography variant="h5">Ballot</Typography>
-          <Container direction="column" disableGutters={true} maxWidth={false}>
-            <Stack
-              direction="row"
-              justifyContent="flex-start"
-              alignItems="flex-start"
-              padding={1}
-              spacing={1}
-            >
-              <Typography
-                color={
-                  utils.getAddress(chairperson) ===
-                  utils.getAddress(account.address)
-                    ? "blue"
-                    : "text.primary"
-                }
+      <Typography variant="h5">Ballot</Typography>
+      <Container direction="column" disableGutters={true} maxWidth={false}>
+        <Stack
+          direction="row"
+          justifyContent="flex-start"
+          alignItems="flex-start"
+          padding={1}
+          spacing={1}
+        >
+          <Typography
+            color={
+              utils.getAddress(chairperson) ===
+              utils.getAddress(account.address)
+                ? "blue"
+                : "text.primary"
+            }
+          >
+            Chairperson: {shortenAddress(chairperson)}
+          </Typography>
+          {utils.getAddress(chairperson) ===
+            utils.getAddress(account.address) && (
+            <>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => setDialogOpen(true)}
+                disabled={disabled || isLoadingGiveRight}
+                endIcon={<GetStatusIcon status={statusGiveRight} />}
               >
-                Chairperson: {shortenAddress(chairperson)}
-              </Typography>
-              {utils.getAddress(chairperson) ===
-                utils.getAddress(account.address) && (
-                <>
+                Give Right To Vote
+              </Button>
+              <Button onClick={handleClickSnack}>Show Winner</Button>
+              <Snackbar
+                open={openSnack}
+                autoHideDuration={6000}
+                onClose={handleCloseSnack}
+              >
+                <Alert
+                  onClose={handleCloseSnack}
+                  severity="success"
+                  sx={{ width: "100%" }}
+                >
+                  {utils.toUtf8String(winnerName)}
+                </Alert>
+              </Snackbar>
+              {isErrorGiveRight && (
+                <ShowError flag={isErrorGiveRight} error={errorGiveRight} />
+              )}
+              <Dialog
+                open={dialogOpen}
+                onClose={handleDialogGiveRight}
+                maxWidth="xs"
+                fullWidth={true}
+                disableEscapeKeyDown={true}
+              >
+                <DialogTitle>Give Right To Vote</DialogTitle>
+                <DialogContent>
+                  <DialogContentText>
+                    Enter the address of the voter to give right
+                  </DialogContentText>
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    id="addressTo"
+                    label="Address"
+                    type="text"
+                    value={addressTo}
+                    fullWidth
+                    required
+                    variant="standard"
+                    onChange={(e) => {
+                      setAddressTo(e.target.value);
+                    }}
+                  />
+                </DialogContent>
+                <DialogActions>
                   <Button
                     variant="contained"
                     size="small"
-                    onClick={() => setDialogOpen(true)}
-                    disabled={disabled || isLoadingGiveRight}
-                    endIcon={<GetStatusIcon status={statusGiveRight} />}
+                    onClick={() => setDialogOpen(false)}
                   >
-                    Give Right To Vote
+                    Cancel
                   </Button>
-                  <Button onClick={handleClickSnack}>Show Winner</Button>
-                  <Snackbar
-                    open={openSnack}
-                    autoHideDuration={6000}
-                    onClose={handleCloseSnack}
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={handleDialogGiveRight}
                   >
-                    <Alert
-                      onClose={handleCloseSnack}
-                      severity="success"
-                      sx={{ width: "100%" }}
-                    >
-                      {utils.toUtf8String(winnerName)}
-                    </Alert>
-                  </Snackbar>
-                  {isErrorGiveRight && (
-                    <ShowError flag={isErrorGiveRight} error={errorGiveRight} />
-                  )}
-                  <Dialog
-                    open={dialogOpen}
-                    onClose={handleDialogGiveRight}
-                    maxWidth="xs"
-                    fullWidth={true}
-                    disableEscapeKeyDown={true}
-                  >
-                    <DialogTitle>Give Right To Vote</DialogTitle>
-                    <DialogContent>
-                      <DialogContentText>
-                        Enter the address of the voter to give right
-                      </DialogContentText>
-                      <TextField
-                        autoFocus
-                        margin="dense"
-                        id="addressTo"
-                        label="Address"
-                        type="text"
-                        value={addressTo}
-                        fullWidth
-                        required
-                        variant="standard"
-                        onChange={(e) => {
-                          setAddressTo(e.target.value);
-                        }}
-                      />
-                    </DialogContent>
-                    <DialogActions>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => setDialogOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={handleDialogGiveRight}
-                      >
-                        Give Right
-                      </Button>
-                    </DialogActions>
-                  </Dialog>
-                </>
-              )}
-            </Stack>
+                    Give Right
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </>
+          )}
+        </Stack>
+        <Stack
+          direction="row"
+          justifyContent="flex-start"
+          alignItems="flex-start"
+          padding={1}
+          spacing={1}
+        >
+          <Typography>Connected:{shortenAddress(account.address)}</Typography>
+        </Stack>
+        {voted === "false" && (
+          <>
             <Stack
               direction="row"
               justifyContent="flex-start"
@@ -265,100 +274,85 @@ const GetBallot = ({ activeChain, contractAddress, contractABI, account }) => {
               padding={1}
               spacing={1}
             >
-              <Typography>
-                Connected:{shortenAddress(account.address)}
-              </Typography>
-            </Stack>
-            {voted === "false" && (
-              <>
-                <Stack
-                  direction="row"
-                  justifyContent="flex-start"
-                  alignItems="flex-start"
-                  padding={1}
-                  spacing={1}
-                >
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => setDialogDelegateOpen(true)}
+                disabled={disabled || isLoadingDelegate}
+                endIcon={<GetStatusIcon status={statusDelegate} />}
+              >
+                delegate your vote
+              </Button>
+              {isErrorDelegate && (
+                <ShowError flag={isErrorDelegate} error={errorDelegate} />
+              )}
+              <Dialog
+                open={dialogDelegateOpen}
+                onClose={handleDialogDelegate}
+                maxWidth="xs"
+                fullWidth={true}
+                disableEscapeKeyDown={true}
+              >
+                <DialogTitle>Delegate vote to voter</DialogTitle>
+                <DialogContent>
+                  <DialogContentText>
+                    Enter the address of the voter to delegate your vote
+                  </DialogContentText>
+                  <TextField
+                    autoFocus
+                    margin="dense"
+                    id="addressToDelegate"
+                    label="Address"
+                    type="text"
+                    value={addressToDelegate}
+                    fullWidth
+                    required
+                    variant="standard"
+                    onChange={(e) => {
+                      setAddressToDelegate(e.target.value);
+                    }}
+                  />
+                </DialogContent>
+                <DialogActions>
                   <Button
                     variant="contained"
                     size="small"
-                    onClick={() => setDialogDelegateOpen(true)}
-                    disabled={disabled || isLoadingDelegate}
-                    endIcon={<GetStatusIcon status={statusDelegate} />}
+                    onClick={() => setDialogDelegateOpen(false)}
                   >
-                    delegate your vote
+                    Cancel
                   </Button>
-                  {isErrorDelegate && (
-                    <ShowError flag={isErrorDelegate} error={errorDelegate} />
-                  )}
-                  <Dialog
-                    open={dialogDelegateOpen}
-                    onClose={handleDialogDelegate}
-                    maxWidth="xs"
-                    fullWidth={true}
-                    disableEscapeKeyDown={true}
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={handleDialogDelegate}
                   >
-                    <DialogTitle>Delegate vote to voter</DialogTitle>
-                    <DialogContent>
-                      <DialogContentText>
-                        Enter the address of the voter to delegate your vote
-                      </DialogContentText>
-                      <TextField
-                        autoFocus
-                        margin="dense"
-                        id="addressToDelegate"
-                        label="Address"
-                        type="text"
-                        value={addressToDelegate}
-                        fullWidth
-                        required
-                        variant="standard"
-                        onChange={(e) => {
-                          setAddressToDelegate(e.target.value);
-                        }}
-                      />
-                    </DialogContent>
-                    <DialogActions>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => setDialogDelegateOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={handleDialogDelegate}
-                      >
-                        delegate
-                      </Button>
-                    </DialogActions>
-                  </Dialog>
-                </Stack>
-              </>
-            )}
+                    delegate
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </Stack>
+          </>
+        )}
 
-            <GetVoter
-              activeChain={activeChain}
-              contractAddress={contractAddress}
-              contractABI={contractABI}
-              address={account.address}
-            />
+        <GetVoter
+          activeChain={activeChain}
+          contractAddress={contractAddress}
+          contractABI={contractABI}
+          address={account.address}
+        />
 
-            <GetProposals
-              activeChain={activeChain}
-              contractAddress={contractAddress}
-              contractABI={contractABI}
-              voted={voted}
-            />
-          </Container>
-          <Container direction="row" disableGutters={true} maxWidth={false}>
-            {isErrorChairperson && (
-              <ShowError flag={isErrorChairperson} error={isErrorChairperson} />
-            )}
-          </Container>
-        </>
-      )}
+        <GetProposals
+          activeChain={activeChain}
+          contractAddress={contractAddress}
+          contractABI={contractABI}
+          voted={voted}
+        />
+      </Container>
+      <Container direction="row" disableGutters={true} maxWidth={false}>
+        {isErrorChairperson && (
+          <ShowError flag={isErrorChairperson} error={isErrorChairperson} />
+        )}
+      </Container>
     </>
   );
 };
