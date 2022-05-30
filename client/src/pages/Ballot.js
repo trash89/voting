@@ -18,9 +18,12 @@ const Ballot = () => {
     isError: isErrorAccount,
     isLoading: isLoadingAccount,
   } = useAccount({
-    enabled: Boolean(activeChain && addressNotZero(contractAddress)),
+    enabled: Boolean(
+      isMounted && activeChain && addressNotZero(contractAddress)
+    ),
   });
 
+  if (!isMounted) return <></>;
   if (!activeChain) return <SupportedNetworks />;
   if (isLoadingAccount) return <div>Loading account…</div>;
   if (isErrorAccount)
@@ -31,18 +34,14 @@ const Ballot = () => {
     );
 
   return (
-    <>
-      {isMounted && (
-        <Container component={Paper} maxWidth="sm" disableGutters={true}>
-          <GetBallot
-            activeChain={activeChain}
-            contractAddress={contractAddress}
-            contractABI={contractABI}
-            account={account}
-          />
-        </Container>
-      )}
-    </>
+    <Container component={Paper} maxWidth="sm" disableGutters={true}>
+      <GetBallot
+        activeChain={activeChain}
+        contractAddress={contractAddress}
+        contractABI={contractABI}
+        account={account}
+      />
+    </Container>
   );
 };
 

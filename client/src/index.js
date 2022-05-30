@@ -10,21 +10,29 @@ import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 import {
-  apiProvider,
-  configureChains,
-  RainbowKitProvider,
   getDefaultWallets,
+  RainbowKitProvider,
+  // eslint-disable-next-line
+  connectorsForWallets,
+  // eslint-disable-next-line
+  wallet,
 } from "@rainbow-me/rainbowkit";
-import { createClient, chain, WagmiProvider } from "wagmi";
+import { createClient, chain, configureChains, WagmiConfig } from "wagmi";
+
+import { alchemyProvider } from "wagmi/providers/alchemy";
+import { publicProvider } from "wagmi/providers/public";
 
 // if (!process.env.REACT_APP_RINKEBY_URL || !process.env.REACT_APP_ARBRINKEBY_URL)
 //   throw new Error(
 //     "Missing environment variables. Make sure to set your .env file."
 //   );
 
-const { provider, chains } = configureChains(
-  [chain.rinkeby, chain.hardhat],
-  [apiProvider.alchemy(process.env.ALCHEMY_ID), apiProvider.fallback()]
+const { chains, provider } = configureChains(
+  [
+    //chain.hardhat,
+    chain.rinkeby,
+  ],
+  [alchemyProvider({ alchemyId: process.env.ALCHEMY_ID }), publicProvider()]
 );
 
 const { connectors } = getDefaultWallets({
@@ -46,16 +54,17 @@ const wagmiClient = createClient({
 const theme = createTheme(themeOptions);
 
 ReactDOM.render(
-  // <React.StrictMode>
-  <WagmiProvider client={wagmiClient}>
-    <RainbowKitProvider chains={chains}>
-      {/* <ApolloProvider client={apolloClient}> */}
-      <ThemeProvider theme={theme}>
-        <App />
-      </ThemeProvider>
-      {/* </ApolloProvider> */}
-    </RainbowKitProvider>
-  </WagmiProvider>,
-  // </React.StrictMode>,
+  <React.StrictMode>
+    <WagmiConfig client={wagmiClient}>
+      <RainbowKitProvider chains={chains}>
+        {/* <ApolloProvider client={apolloClient}> */}
+        <ThemeProvider theme={theme}>
+          <App />
+        </ThemeProvider>
+        {/* </ApolloProvider> */}
+      </RainbowKitProvider>
+    </WagmiConfig>
+    ,
+  </React.StrictMode>,
   document.getElementById("root")
 );

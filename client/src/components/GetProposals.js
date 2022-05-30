@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { useContractRead, useContractWrite } from "wagmi";
+import {
+  useContractRead,
+  useContractWrite,
+  useWaitForTransaction,
+} from "wagmi";
 import { BigNumber, utils } from "ethers";
 
 import Table from "@mui/material/Table";
@@ -12,7 +16,7 @@ import TableRow from "@mui/material/TableRow";
 import Stack from "@mui/material/Stack";
 
 import { useIsMounted, useGetProposalsCount } from "../hooks";
-import { addressNotZero } from "../utils/utils";
+import { addressNotZero, getNumConfirmations } from "../utils/utils";
 import { Button } from "@mui/material";
 import { GetStatusIcon, ShowError } from "./";
 
@@ -25,6 +29,10 @@ const GetProposal = ({
 }) => {
   const isMounted = useIsMounted();
   const [disabled, setDisabled] = useState(false);
+  const numConfirmations = getNumConfirmations(activeChain);
+  const isEnabled = Boolean(
+    isMounted && activeChain && addressNotZero(contractAddress)
+  );
   const {
     data: proposal,
     isLoading: isLoadingProposal,
@@ -39,12 +47,13 @@ const GetProposal = ({
     "proposals",
     {
       args: [BigNumber.from(idxProposal)],
-      enabled: Boolean(activeChain && addressNotZero(contractAddress)),
-      watch: Boolean(activeChain && addressNotZero(contractAddress)),
+      enabled: isEnabled,
+      watch: isEnabled,
     }
   );
 
   const {
+    data: dataVote,
     error: errorVote,
     isError: isErrorVote,
     isLoading: isLoadingVote,
@@ -57,22 +66,26 @@ const GetProposal = ({
     },
     "vote",
     {
-      enabled: Boolean(activeChain && addressNotZero(contractAddress)),
+      enabled: isEnabled,
     }
   );
+  const { status: statusVoteWait } = useWaitForTransaction({
+    hash: dataVote?.hash,
+    wait: dataVote?.wait,
+    confirmations: numConfirmations,
+    enabled: isEnabled,
+  });
 
   const handleVote = (e) => {
     e.preventDefault();
-    console.log(e.currentTarget.value);
     writeVote({ args: [BigNumber.from(e.currentTarget.value)] });
   };
   useEffect(() => {
-    if (statusVote !== "loading") {
+    if (statusVote !== "loading" && statusVoteWait !== "loading") {
       if (disabled) setDisabled(false);
     }
-
     // eslint-disable-next-line
-  }, [statusVote]);
+  }, [statusVote, statusVoteWait]);
 
   return (
     <>
@@ -128,6 +141,7 @@ const GetProposals = ({ activeChain, contractAddress, contractABI, voted }) => {
     ...Array.from({ length: parseInt(proposalsCount) }, (_, idx) => `${++idx}`),
   ];
 
+  if (!isMounted) return <></>;
   return (
     <Stack
       direction="column"
@@ -136,35 +150,31 @@ const GetProposals = ({ activeChain, contractAddress, contractABI, voted }) => {
       spacing={1}
       padding={1}
     >
-      {isMounted && (
-        <>
-          <TableContainer component={Paper}>
-            <Table size="small" aria-label="Proposals">
-              <TableHead>
-                <TableRow>
-                  <TableCell align="left">#</TableCell>
-                  <TableCell align="left">Proposal</TableCell>
-                  <TableCell align="left">Votes</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {proposalsArray?.map((_, index) => {
-                  return (
-                    <GetProposal
-                      key={index}
-                      idxProposal={index}
-                      contractAddress={contractAddress}
-                      contractABI={contractABI}
-                      activeChain={activeChain}
-                      voted={voted}
-                    />
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </>
-      )}
+      <TableContainer component={Paper}>
+        <Table size="small" aria-label="Proposals">
+          <TableHead>
+            <TableRow>
+              <TableCell align="left">#</TableCell>
+              <TableCell align="left">Proposal</TableCell>
+              <TableCell align="left">Votes</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {proposalsArray?.map((_, index) => {
+              return (
+                <GetProposal
+                  key={index}
+                  idxProposal={index}
+                  contractAddress={contractAddress}
+                  contractABI={contractABI}
+                  activeChain={activeChain}
+                  voted={voted}
+                />
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Stack>
   );
 };

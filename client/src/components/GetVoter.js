@@ -14,46 +14,43 @@ const GetVoter = ({ activeChain, contractAddress, contractABI, address }) => {
     address
   );
 
+  if (!isMounted) return <></>;
   return (
     <>
-      {isMounted && (
-        <>
-          <Stack
-            direction="row"
-            justifyContent="flex-start"
-            alignItems="flex-start"
-            padding={1}
-            spacing={1}
-          >
-            <Typography>Weight:{weight}</Typography>
-            {!addressNotZero(delegate) && (
-              <>
-                {voted === "true" ? (
-                  <Typography>Voted</Typography>
-                ) : (
-                  <Typography>Not voted</Typography>
-                )}
-
-                {voted === "false" || vote === "-1" ? (
-                  <Typography>any proposal yet</Typography>
-                ) : (
-                  <Typography>the proposal #{vote}</Typography>
-                )}
-              </>
+      <Stack
+        direction="row"
+        justifyContent="flex-start"
+        alignItems="flex-start"
+        padding={1}
+        spacing={1}
+      >
+        <Typography>Weight:{weight}</Typography>
+        {!addressNotZero(delegate) && (
+          <>
+            {voted === "true" ? (
+              <Typography>Voted</Typography>
+            ) : (
+              <Typography>Not voted</Typography>
             )}
-          </Stack>
-          {addressNotZero(delegate) && (
-            <Stack
-              direction="row"
-              justifyContent="flex-start"
-              alignItems="flex-start"
-              padding={1}
-              spacing={1}
-            >
-              <Typography>Delegated To {shortenAddress(delegate)}</Typography>
-            </Stack>
-          )}
-        </>
+
+            {voted === "false" || vote === "-1" ? (
+              <Typography>any proposal yet</Typography>
+            ) : (
+              <Typography>the proposal #{vote}</Typography>
+            )}
+          </>
+        )}
+      </Stack>
+      {addressNotZero(delegate) && (
+        <Stack
+          direction="row"
+          justifyContent="flex-start"
+          alignItems="flex-start"
+          padding={1}
+          spacing={1}
+        >
+          <Typography>Delegated To {shortenAddress(delegate)}</Typography>
+        </Stack>
       )}
     </>
   );

@@ -14,9 +14,17 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 
 import { utils } from "ethers";
-import { addressNotZero, shortenAddress } from "../utils/utils";
+import {
+  addressNotZero,
+  shortenAddress,
+  getNumConfirmations,
+} from "../utils/utils";
 
-import { useContractWrite, useContractRead } from "wagmi";
+import {
+  useContractWrite,
+  useContractRead,
+  useWaitForTransaction,
+} from "wagmi";
 import { useIsMounted, useGetVoter } from "../hooks";
 import { GetStatusIcon, ShowError } from ".";
 import { GetProposals, GetVoter } from "../components";
@@ -29,7 +37,10 @@ const GetBallot = ({ activeChain, contractAddress, contractABI, account }) => {
   const [addressTo, setAddressTo] = useState("");
   const [addressToDelegate, setAddressToDelegate] = useState("");
   const [openSnack, setOpenSnack] = useState(false);
-
+  const isEnabled = Boolean(
+    isMounted && activeChain && account && addressNotZero(contractAddress)
+  );
+  const numConfirmations = getNumConfirmations(activeChain);
   const Alert = forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
   });
@@ -45,8 +56,8 @@ const GetBallot = ({ activeChain, contractAddress, contractABI, account }) => {
     },
     "chairperson",
     {
-      watch: Boolean(activeChain && addressNotZero(contractAddress)),
-      enabled: Boolean(activeChain && addressNotZero(contractAddress)),
+      watch: isEnabled,
+      enabled: isEnabled,
     }
   );
   const { voted } = useGetVoter(
@@ -57,6 +68,7 @@ const GetBallot = ({ activeChain, contractAddress, contractABI, account }) => {
   );
 
   const {
+    data: dataGiveRight,
     error: errorGiveRight,
     isError: isErrorGiveRight,
     isLoading: isLoadingGiveRight,
@@ -69,16 +81,18 @@ const GetBallot = ({ activeChain, contractAddress, contractABI, account }) => {
     },
     "giveRightToVote",
     {
-      enabled: Boolean(
-        activeChain &&
-          account &&
-          addressNotZero(contractAddress) &&
-          addressTo &&
-          addressNotZero(addressTo)
-      ),
+      enabled: Boolean(isEnabled && addressTo && addressNotZero(addressTo)),
     }
   );
+  const { status: statusGiveRightWait } = useWaitForTransaction({
+    hash: dataGiveRight?.hash,
+    wait: dataGiveRight?.wait,
+    confirmations: numConfirmations,
+    enabled: Boolean(isEnabled && addressTo && addressNotZero(addressTo)),
+  });
+
   const {
+    data: dataDelegate,
     error: errorDelegate,
     isError: isErrorDelegate,
     isLoading: isLoadingDelegate,
@@ -92,14 +106,16 @@ const GetBallot = ({ activeChain, contractAddress, contractABI, account }) => {
     "delegate",
     {
       enabled: Boolean(
-        activeChain &&
-          account &&
-          addressNotZero(contractAddress) &&
-          addressToDelegate &&
-          addressNotZero(addressToDelegate)
+        isEnabled && addressToDelegate && addressNotZero(addressToDelegate)
       ),
     }
   );
+  const { status: statusDelegateWait } = useWaitForTransaction({
+    hash: dataDelegate?.hash,
+    wait: dataDelegate?.wait,
+    confirmations: numConfirmations,
+    enabled: Boolean(isEnabled && addressTo && addressNotZero(addressTo)),
+  });
 
   const { data: winnerName } = useContractRead(
     {
@@ -108,23 +124,27 @@ const GetBallot = ({ activeChain, contractAddress, contractABI, account }) => {
     },
     "winnerName",
     {
-      enabled: Boolean(
-        activeChain && account && addressNotZero(contractAddress)
-      ),
-      watch: Boolean(activeChain && account && addressNotZero(contractAddress)),
+      enabled: isEnabled,
+      watch: isEnabled,
     }
   );
 
   useEffect(() => {
-    if (statusGiveRight !== "loading") {
+    if (
+      statusGiveRight !== "loading" &&
+      statusGiveRightWait !== "loading" &&
+      statusDelegate !== "loading" &&
+      statusDelegateWait !== "loading"
+    ) {
       if (disabled) setDisabled(false);
     }
-    if (statusDelegate !== "loading") {
-      if (disabled) setDisabled(false);
-    }
-
     // eslint-disable-next-line
-  }, [statusGiveRight, statusDelegate]);
+  }, [
+    statusGiveRight,
+    statusGiveRightWait,
+    statusDelegate,
+    statusDelegateWait,
+  ]);
 
   const handleDialogGiveRight = () => {
     if (addressTo && addressNotZero(addressTo)) {

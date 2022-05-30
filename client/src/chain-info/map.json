@@ -1,12 +1,5 @@
 {
-  "31337": {
-    "Ballot": [
-      "0x5FbDB2315678afecb367f032d93F642f64180aa3"
-    ]
-  },
   "4": {
-    "Ballot": [
-      "0xe891f8c70148ad2b1FBaD3693A3D14ec7Ae20aC1"
-    ]
+    "Ballot": ["0xed2031af9167B0D4B3232424A7E944698484B563"]
   }
 }

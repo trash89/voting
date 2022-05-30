@@ -51,6 +51,18 @@ UPDATE_FRONT_END=yes
 
 ## 4. Deploy on Hardhat
 
+Modify client/src/index.js to include the chain.hardhat. Uncomment the hardhat line:
+
+```
+const { chains, provider } = configureChains(
+  [
+    //chain.hardhat,
+    chain.rinkeby,
+  ],
+  [alchemyProvider({ alchemyId: process.env.ALCHEMY_ID }), publicProvider()]
+);
+```
+
 Prepare the network hh-local in brownie:
 
 ```
