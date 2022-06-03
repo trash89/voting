@@ -5,7 +5,7 @@ import networkMapping from "../chain-info/map.json";
 
 import contract1 from "../chain-info/Ballot.json";
 
-const GetContract = (contractName) => {
+const useGetContract = (contractName) => {
   const { activeChain } = useNetwork();
   let contractAddress;
 
@@ -23,11 +23,12 @@ const GetContract = (contractName) => {
 
   if (contractName === "Ballot") {
     return {
-      contractAddress: activeChain ? formattedAddress : constants.AddressZero,
-      contractABI: abiContract1,
+      address: activeChain ? formattedAddress : constants.AddressZero,
+      ABI: abiContract1,
     };
   }
-  return { contractAddress: formattedAddress, contractABI: abiContract1 };
+
+  return { address: formattedAddress, ABI: abiContract1 };
 };
 
-export default GetContract;
+export default useGetContract;

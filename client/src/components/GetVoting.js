@@ -27,9 +27,9 @@ import {
 } from "wagmi";
 import { useIsMounted, useGetVoter } from "../hooks";
 import { GetStatusIcon, ShowError } from ".";
-import { GetProposals, GetVoter } from "../components";
+import { GetProposals, GetVoter } from ".";
 
-const GetBallot = ({ activeChain, contractAddress, contractABI, account }) => {
+const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
   const isMounted = useIsMounted();
   const [disabled, setDisabled] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -181,7 +181,7 @@ const GetBallot = ({ activeChain, contractAddress, contractABI, account }) => {
     return <>Loading...</>;
   return (
     <>
-      <Typography variant="h5">Ballot</Typography>
+      <Typography variant="h5">Voting</Typography>
       <Container direction="column" disableGutters={true} maxWidth={false}>
         <Stack
           direction="row"
@@ -377,4 +377,4 @@ const GetBallot = ({ activeChain, contractAddress, contractABI, account }) => {
   );
 };
 
-export default GetBallot;
+export default GetVoting;

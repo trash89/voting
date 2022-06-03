@@ -1,5 +1,5 @@
 import Error from "./Error";
-import Ballot from "./Ballot";
+import Voting from "./Voting";
 import SharedLayout from "./SharedLayout";
 
-export { Error, Ballot, SharedLayout };
+export { Error, Voting, SharedLayout };

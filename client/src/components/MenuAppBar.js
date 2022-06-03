@@ -29,7 +29,7 @@ const MenuAppBar = () => {
           </NavLink>
 
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Ballot
+            Voting
           </Typography>
           <ConnectButton />
         </Toolbar>

@@ -1,19 +1,21 @@
 import Alert from "./Alert";
 import MenuAppBar from "./MenuAppBar";
 import SupportedNetworks from "./SupportedNetworks";
-import GetContract from "./GetContract";
 import GetStatusIcon from "./GetStatusIcon";
-import GetBallot from "./GetBallot";
+import GetVoting from "./GetVoting";
 import GetProposals from "./GetProposals";
 import GetVoter from "./GetVoter";
 import ShowError from "./ShowError";
+import AppDescription from "./AppDescription";
+import AppRequirements from "./AppRequirements";
 
 export {
   Alert,
+  AppDescription,
+  AppRequirements,
   MenuAppBar,
   GetStatusIcon,
-  GetContract,
-  GetBallot,
+  GetVoting,
   GetProposals,
   GetVoter,
   SupportedNetworks,

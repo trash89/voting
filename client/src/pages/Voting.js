@@ -4,14 +4,15 @@ import Paper from "@mui/material/Paper";
 import { useNetwork, useAccount } from "wagmi";
 import { addressNotZero } from "../utils/utils";
 
-import { SupportedNetworks, GetContract, GetBallot } from "../components";
-import { useIsMounted } from "../hooks";
+import { SupportedNetworks, GetVoting } from "../components";
+import { useIsMounted, useGetContract } from "../hooks";
 
-const Ballot = () => {
+const Voting = () => {
   const isMounted = useIsMounted();
   const { activeChain } = useNetwork();
 
-  const { contractAddress, contractABI } = GetContract("Ballot");
+  const { address: contractAddress, ABI: contractABI } =
+    useGetContract("Ballot");
   const {
     data: account,
     error: errorAccount,
@@ -35,7 +36,7 @@ const Ballot = () => {
 
   return (
     <Container component={Paper} maxWidth="sm" disableGutters={true}>
-      <GetBallot
+      <GetVoting
         activeChain={activeChain}
         contractAddress={contractAddress}
         contractABI={contractABI}
@@ -45,4 +46,4 @@ const Ballot = () => {
   );
 };
 
-export default Ballot;
+export default Voting;
