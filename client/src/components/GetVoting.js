@@ -13,7 +13,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 
-import { utils } from "ethers";
+import { constants, utils } from "ethers";
 import { addressNotZero, shortenAddress } from "../utils/utils";
 
 import { useContractRead } from "wagmi";
@@ -49,7 +49,11 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
   });
 
-  const { data: chairperson, isError: isErrorChairperson } = useContractRead(
+  const {
+    data: chairperson,
+    isLoading: isLoadingChairperson,
+    isError: isErrorChairperson,
+  } = useContractRead(
     {
       addressOrName: contractAddress,
       contractInterface: contractABI,
@@ -60,7 +64,7 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
       enabled: isEnabled,
     }
   );
-  const { data: winnerName } = useContractRead(
+  const { data: winnerName, isLoading: isLoadingWinnerName } = useContractRead(
     {
       addressOrName: contractAddress,
       contractInterface: contractABI,
@@ -182,7 +186,7 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
       setIsErrorInput({ ...isErrorInput, addressToDelegate: false });
   };
 
-  if (!isMounted) return <></>;
+  if (!isMounted || isLoadingChairperson || isLoadingWinnerName) return <></>;
   return (
     <Paper elevation={4}>
       <Stack
@@ -204,8 +208,9 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
         >
           <Typography
             color={
-              utils.getAddress(chairperson) ===
-              utils.getAddress(account?.address)
+              utils.getAddress(
+                chairperson ? chairperson : constants.AddressZero
+              ) === utils.getAddress(account?.address)
                 ? "blue"
                 : "primary.text"
             }

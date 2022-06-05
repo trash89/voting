@@ -31,6 +31,7 @@ const GetProposal = ({
   const {
     data: proposal,
     isError: isErrorProposal,
+    isLoading: isLoadingProposal,
     error: errorProposal,
   } = useContractRead(
     {
@@ -63,7 +64,7 @@ const GetProposal = ({
   const handleVote = (e) => {
     e.preventDefault();
     setDisabled(true);
-    writeVote({ args: [BigNumber.from(e.currentTarget.value)] });
+    writeVote({ args: [BigNumber.from(e.target.value)] });
   };
   useEffect(() => {
     if (statusVote !== "loading" && statusVoteWait !== "loading") {
@@ -71,7 +72,7 @@ const GetProposal = ({
     }
     // eslint-disable-next-line
   }, [statusVote, statusVoteWait]);
-  if (!isMounted) return <></>;
+  if (!isMounted || isLoadingProposal) return <></>;
   const idxFormatted = idxProposal.toString();
   const proposalFormatted = utils.toUtf8String(proposal[0]);
   const votesFormatted = proposal[1].toString();
