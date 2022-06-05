@@ -1,9 +1,9 @@
 import { useState, useEffect, forwardRef } from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
+import Paper from "@mui/material/Paper";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 
@@ -14,42 +14,42 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 
 import { utils } from "ethers";
-import {
-  addressNotZero,
-  shortenAddress,
-  getNumConfirmations,
-} from "../utils/utils";
+import { addressNotZero, shortenAddress } from "../utils/utils";
 
+import { useContractRead } from "wagmi";
+import { useIsMounted, useGetVoter, useGetFuncWrite } from "../hooks";
 import {
-  useContractWrite,
-  useContractRead,
-  useWaitForTransaction,
-} from "wagmi";
-import { useIsMounted, useGetVoter } from "../hooks";
-import { GetStatusIcon, ShowError } from ".";
-import { GetProposals, GetVoter } from ".";
+  GetStatusIcon,
+  ShowError,
+  GetProposals,
+  GetVoter,
+} from "../components";
 
 const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
   const isMounted = useIsMounted();
   const [disabled, setDisabled] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogDelegateOpen, setDialogDelegateOpen] = useState(false);
-  const [addressTo, setAddressTo] = useState("");
-  const [addressToDelegate, setAddressToDelegate] = useState("");
+
+  const [input, setInput] = useState({
+    addressTo: "",
+    addressToDelegate: "",
+  });
+  const [isErrorInput, setIsErrorInput] = useState({
+    addressTo: false,
+    addressToDelegate: false,
+  });
+
   const [openSnack, setOpenSnack] = useState(false);
   const isEnabled = Boolean(
     isMounted && activeChain && account && addressNotZero(contractAddress)
   );
-  const numConfirmations = getNumConfirmations(activeChain);
+
   const Alert = forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
   });
 
-  const {
-    data: chairperson,
-    isLoading: isLoadingChairperson,
-    isError: isErrorChairperson,
-  } = useContractRead(
+  const { data: chairperson, isError: isErrorChairperson } = useContractRead(
     {
       addressOrName: contractAddress,
       contractInterface: contractABI,
@@ -60,63 +60,6 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
       enabled: isEnabled,
     }
   );
-  const { voted } = useGetVoter(
-    activeChain,
-    contractAddress,
-    contractABI,
-    account.address
-  );
-
-  const {
-    data: dataGiveRight,
-    error: errorGiveRight,
-    isError: isErrorGiveRight,
-    isLoading: isLoadingGiveRight,
-    write: writeGiveRight,
-    status: statusGiveRight,
-  } = useContractWrite(
-    {
-      addressOrName: contractAddress,
-      contractInterface: contractABI,
-    },
-    "giveRightToVote",
-    {
-      enabled: Boolean(isEnabled && addressTo && addressNotZero(addressTo)),
-    }
-  );
-  const { status: statusGiveRightWait } = useWaitForTransaction({
-    hash: dataGiveRight?.hash,
-    wait: dataGiveRight?.wait,
-    confirmations: numConfirmations,
-    enabled: Boolean(isEnabled && addressTo && addressNotZero(addressTo)),
-  });
-
-  const {
-    data: dataDelegate,
-    error: errorDelegate,
-    isError: isErrorDelegate,
-    isLoading: isLoadingDelegate,
-    write: writeDelegate,
-    status: statusDelegate,
-  } = useContractWrite(
-    {
-      addressOrName: contractAddress,
-      contractInterface: contractABI,
-    },
-    "delegate",
-    {
-      enabled: Boolean(
-        isEnabled && addressToDelegate && addressNotZero(addressToDelegate)
-      ),
-    }
-  );
-  const { status: statusDelegateWait } = useWaitForTransaction({
-    hash: dataDelegate?.hash,
-    wait: dataDelegate?.wait,
-    confirmations: numConfirmations,
-    enabled: Boolean(isEnabled && addressTo && addressNotZero(addressTo)),
-  });
-
   const { data: winnerName } = useContractRead(
     {
       addressOrName: contractAddress,
@@ -129,6 +72,43 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
     }
   );
 
+  const { voted } = useGetVoter(
+    activeChain,
+    contractAddress,
+    contractABI,
+    account.address
+  );
+
+  // giveRightToVote function
+  const {
+    error: errorGiveRight,
+    isError: isErrorGiveRight,
+    write: writeGiveRight,
+    status: statusGiveRight,
+    statusWait: statusGiveRightWait,
+  } = useGetFuncWrite(
+    "giveRightToVote",
+    activeChain,
+    contractAddress,
+    contractABI,
+    isEnabled
+  );
+
+  // delegate function
+  const {
+    error: errorDelegate,
+    isError: isErrorDelegate,
+    write: writeDelegate,
+    status: statusDelegate,
+    statusWait: statusDelegateWait,
+  } = useGetFuncWrite(
+    "delegate",
+    activeChain,
+    contractAddress,
+    contractABI,
+    isEnabled
+  );
+
   useEffect(() => {
     if (
       statusGiveRight !== "loading" &&
@@ -137,6 +117,7 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
       statusDelegateWait !== "loading"
     ) {
       if (disabled) setDisabled(false);
+      setInput({ addressTo: "", addressToDelegate: "" });
     }
     // eslint-disable-next-line
   }, [
@@ -147,21 +128,35 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
   ]);
 
   const handleDialogGiveRight = () => {
-    if (addressTo && addressNotZero(addressTo)) {
+    if (
+      input.addressTo &&
+      input.addressTo !== "" &&
+      addressNotZero(input.addressTo) &&
+      utils.isAddress(input.addressTo)
+    ) {
+      setDisabled(true);
       writeGiveRight({
-        args: [utils.getAddress(addressTo)],
+        args: [utils.getAddress(input.addressTo)],
       });
       setDialogOpen(false);
-      setAddressTo("");
+    } else {
+      setIsErrorInput({ ...isErrorInput, addressTo: true });
     }
   };
   const handleDialogDelegate = () => {
-    if (addressToDelegate && addressNotZero(addressToDelegate)) {
+    if (
+      input.addressToDelegate &&
+      input.addressToDelegate !== "" &&
+      addressNotZero(input.addressToDelegate) &&
+      utils.isAddress(input.addressToDelegate)
+    ) {
+      setDisabled(true);
       writeDelegate({
-        args: [utils.getAddress(addressToDelegate)],
+        args: [utils.getAddress(input.addressToDelegate)],
       });
       setDialogDelegateOpen(false);
-      setAddressToDelegate("");
+    } else {
+      setIsErrorInput({ ...isErrorInput, addressToDelegate: true });
     }
   };
 
@@ -173,46 +168,66 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
     if (reason === "clickaway") {
       return;
     }
-
     setOpenSnack(false);
   };
 
-  if (!isMounted || isLoadingChairperson || isErrorChairperson || !chairperson)
-    return <>Loading...</>;
+  const handleAddressTo = (e) => {
+    setInput({ ...input, addressTo: e.target.value });
+    if (isErrorInput.addressTo)
+      setIsErrorInput({ ...isErrorInput, addressTo: false });
+  };
+  const handleAddressToDelegate = (e) => {
+    setInput({ ...input, addressToDelegate: e.target.value });
+    if (isErrorInput.addressToDelegate)
+      setIsErrorInput({ ...isErrorInput, addressToDelegate: false });
+  };
+
+  if (!isMounted) return <></>;
   return (
-    <>
-      <Typography variant="h5">Voting</Typography>
-      <Container direction="column" disableGutters={true} maxWidth={false}>
+    <Paper elevation={4}>
+      <Stack
+        direction="column"
+        justifyContent="flex-start"
+        alignItems="flex-start"
+        padding={1}
+        spacing={0}
+      >
+        <Typography variant="h6" gutterBottom component="div">
+          Voting
+        </Typography>
         <Stack
           direction="row"
           justifyContent="flex-start"
           alignItems="flex-start"
-          padding={1}
-          spacing={1}
+          padding={0}
+          spacing={0}
         >
           <Typography
             color={
               utils.getAddress(chairperson) ===
-              utils.getAddress(account.address)
+              utils.getAddress(account?.address)
                 ? "blue"
-                : "text.primary"
+                : "primary.text"
             }
           >
             Chairperson: {shortenAddress(chairperson)}
           </Typography>
           {utils.getAddress(chairperson) ===
-            utils.getAddress(account.address) && (
+            utils.getAddress(account?.address) && (
             <>
               <Button
                 variant="contained"
                 size="small"
                 onClick={() => setDialogOpen(true)}
-                disabled={disabled || isLoadingGiveRight}
-                endIcon={<GetStatusIcon status={statusGiveRight} />}
+                disabled={disabled}
+                startIcon={<GetStatusIcon status={statusGiveRight} />}
+                endIcon={<GetStatusIcon status={statusGiveRightWait} />}
               >
                 Give Right To Vote
               </Button>
-              <Button onClick={handleClickSnack}>Show Winner</Button>
+              <Button size="small" onClick={handleClickSnack}>
+                Show Winner
+              </Button>
               <Snackbar
                 open={openSnack}
                 autoHideDuration={6000}
@@ -226,9 +241,6 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
                   {utils.toUtf8String(winnerName)}
                 </Alert>
               </Snackbar>
-              {isErrorGiveRight && (
-                <ShowError flag={isErrorGiveRight} error={errorGiveRight} />
-              )}
               <Dialog
                 open={dialogOpen}
                 onClose={handleDialogGiveRight}
@@ -242,18 +254,17 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
                     Enter the address of the voter to give right
                   </DialogContentText>
                   <TextField
+                    error={isErrorInput.addressTo}
                     autoFocus
                     margin="dense"
                     id="addressTo"
                     label="Address"
                     type="text"
-                    value={addressTo}
+                    value={input.addressTo}
                     fullWidth
                     required
                     variant="standard"
-                    onChange={(e) => {
-                      setAddressTo(e.target.value);
-                    }}
+                    onChange={handleAddressTo}
                   />
                 </DialogContent>
                 <DialogActions>
@@ -280,8 +291,8 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
           direction="row"
           justifyContent="flex-start"
           alignItems="flex-start"
-          padding={1}
-          spacing={1}
+          padding={0}
+          spacing={0}
         >
           <Typography>Connected:{shortenAddress(account.address)}</Typography>
         </Stack>
@@ -291,15 +302,16 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
               direction="row"
               justifyContent="flex-start"
               alignItems="flex-start"
-              padding={1}
-              spacing={1}
+              padding={0}
+              spacing={0}
             >
               <Button
                 variant="contained"
                 size="small"
                 onClick={() => setDialogDelegateOpen(true)}
-                disabled={disabled || isLoadingDelegate}
-                endIcon={<GetStatusIcon status={statusDelegate} />}
+                disabled={disabled}
+                startIcon={<GetStatusIcon status={statusDelegate} />}
+                endIcon={<GetStatusIcon status={statusDelegateWait} />}
               >
                 delegate your vote
               </Button>
@@ -319,18 +331,17 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
                     Enter the address of the voter to delegate your vote
                   </DialogContentText>
                   <TextField
+                    error={isErrorInput.addressToDelegate}
                     autoFocus
                     margin="dense"
                     id="addressToDelegate"
                     label="Address"
                     type="text"
-                    value={addressToDelegate}
+                    value={input.addressToDelegate}
                     fullWidth
                     required
                     variant="standard"
-                    onChange={(e) => {
-                      setAddressToDelegate(e.target.value);
-                    }}
+                    onChange={handleAddressToDelegate}
                   />
                 </DialogContent>
                 <DialogActions>
@@ -353,27 +364,26 @@ const GetVoting = ({ activeChain, contractAddress, contractABI, account }) => {
             </Stack>
           </>
         )}
-
         <GetVoter
           activeChain={activeChain}
           contractAddress={contractAddress}
           contractABI={contractABI}
           address={account.address}
         />
-
         <GetProposals
           activeChain={activeChain}
           contractAddress={contractAddress}
           contractABI={contractABI}
           voted={voted}
         />
-      </Container>
-      <Container direction="row" disableGutters={true} maxWidth={false}>
-        {isErrorChairperson && (
-          <ShowError flag={isErrorChairperson} error={isErrorChairperson} />
-        )}
-      </Container>
-    </>
+      </Stack>
+      {isErrorChairperson && (
+        <ShowError flag={isErrorChairperson} error={isErrorChairperson} />
+      )}
+      {isErrorGiveRight && (
+        <ShowError flag={isErrorGiveRight} error={errorGiveRight} />
+      )}
+    </Paper>
   );
 };
 

@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
-import {
-  useContractRead,
-  useContractWrite,
-  useWaitForTransaction,
-} from "wagmi";
+import { useContractRead } from "wagmi";
 import { BigNumber, utils } from "ethers";
 
+import { Button } from "@mui/material";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableContainer from "@mui/material/TableContainer";
@@ -15,10 +12,9 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Stack from "@mui/material/Stack";
 
-import { useIsMounted, useGetProposalsCount } from "../hooks";
-import { addressNotZero, getNumConfirmations } from "../utils/utils";
-import { Button } from "@mui/material";
-import { GetStatusIcon, ShowError } from "./";
+import { useIsMounted, useGetProposalsCount, useGetFuncWrite } from "../hooks";
+import { addressNotZero } from "../utils/utils";
+import { GetStatusIcon, ShowError } from "../components";
 
 const GetProposal = ({
   idxProposal,
@@ -29,15 +25,12 @@ const GetProposal = ({
 }) => {
   const isMounted = useIsMounted();
   const [disabled, setDisabled] = useState(false);
-  const numConfirmations = getNumConfirmations(activeChain);
   const isEnabled = Boolean(
     isMounted && activeChain && addressNotZero(contractAddress)
   );
   const {
     data: proposal,
-    isLoading: isLoadingProposal,
     isError: isErrorProposal,
-    isSuccess: isSuccessProposal,
     error: errorProposal,
   } = useContractRead(
     {
@@ -52,32 +45,24 @@ const GetProposal = ({
     }
   );
 
+  // vote function
   const {
-    data: dataVote,
     error: errorVote,
     isError: isErrorVote,
-    isLoading: isLoadingVote,
     write: writeVote,
     status: statusVote,
-  } = useContractWrite(
-    {
-      addressOrName: contractAddress,
-      contractInterface: contractABI,
-    },
+    statusWait: statusVoteWait,
+  } = useGetFuncWrite(
     "vote",
-    {
-      enabled: isEnabled,
-    }
+    activeChain,
+    contractAddress,
+    contractABI,
+    isEnabled
   );
-  const { status: statusVoteWait } = useWaitForTransaction({
-    hash: dataVote?.hash,
-    wait: dataVote?.wait,
-    confirmations: numConfirmations,
-    enabled: isEnabled,
-  });
 
   const handleVote = (e) => {
     e.preventDefault();
+    setDisabled(true);
     writeVote({ args: [BigNumber.from(e.currentTarget.value)] });
   };
   useEffect(() => {
@@ -86,46 +71,46 @@ const GetProposal = ({
     }
     // eslint-disable-next-line
   }, [statusVote, statusVoteWait]);
-
+  if (!isMounted) return <></>;
+  const idxFormatted = idxProposal.toString();
+  const proposalFormatted = utils.toUtf8String(proposal[0]);
+  const votesFormatted = proposal[1].toString();
   return (
-    <>
-      {isMounted && !isLoadingProposal && isSuccessProposal && (
-        <TableRow key={idxProposal}>
-          <TableCell align="left">{idxProposal.toString()}</TableCell>
-          <TableCell align="left">{utils.toUtf8String(proposal[0])}</TableCell>
-          <TableCell align="right">{proposal[1].toString()}</TableCell>
-          {voted !== "true" && (
-            <TableCell align="right">
-              <Button
-                variant="contained"
-                size="small"
-                value={idxProposal}
-                onClick={handleVote}
-                disabled={disabled || isLoadingVote}
-                endIcon={<GetStatusIcon status={statusVote} />}
-              >
-                Vote
-              </Button>
-            </TableCell>
-          )}
-          {isErrorProposal ||
-            (isErrorVote && (
-              <>
-                {isErrorProposal && (
-                  <TableCell align="left">
-                    <ShowError flag={isErrorProposal} error={errorProposal} />
-                  </TableCell>
-                )}
-                {isErrorVote && (
-                  <TableCell align="left">
-                    <ShowError flag={isErrorVote} error={errorVote} />
-                  </TableCell>
-                )}
-              </>
-            ))}
-        </TableRow>
+    <TableRow key={idxProposal}>
+      <TableCell align="left">{idxFormatted}</TableCell>
+      <TableCell align="left">{proposalFormatted}</TableCell>
+      <TableCell align="right">{votesFormatted}</TableCell>
+      {voted !== "true" && (
+        <TableCell align="right">
+          <Button
+            variant="contained"
+            size="small"
+            value={idxProposal}
+            onClick={handleVote}
+            disabled={disabled}
+            startIcon={<GetStatusIcon status={statusVote} />}
+            endIcon={<GetStatusIcon status={statusVoteWait} />}
+          >
+            Vote
+          </Button>
+        </TableCell>
       )}
-    </>
+      {isErrorProposal ||
+        (isErrorVote && (
+          <>
+            {isErrorProposal && (
+              <TableCell align="left">
+                <ShowError flag={isErrorProposal} error={errorProposal} />
+              </TableCell>
+            )}
+            {isErrorVote && (
+              <TableCell align="left">
+                <ShowError flag={isErrorVote} error={errorVote} />
+              </TableCell>
+            )}
+          </>
+        ))}
+    </TableRow>
   );
 };
 

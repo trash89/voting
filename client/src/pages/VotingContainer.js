@@ -1,5 +1,4 @@
-import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
 
 import { useNetwork, useAccount } from "wagmi";
 import { addressNotZero } from "../utils/utils";
@@ -7,7 +6,7 @@ import { addressNotZero } from "../utils/utils";
 import { SupportedNetworks, GetVoting } from "../components";
 import { useIsMounted, useGetContract } from "../hooks";
 
-const Voting = () => {
+const VotingContainer = () => {
   const isMounted = useIsMounted();
   const { activeChain } = useNetwork();
 
@@ -35,15 +34,21 @@ const Voting = () => {
     );
 
   return (
-    <Container component={Paper} maxWidth="sm" disableGutters={true}>
+    <Stack
+      direction="column"
+      spacing={0}
+      padding={1}
+      justifyContent="flex-start"
+      alignItems="flex-start"
+    >
       <GetVoting
         activeChain={activeChain}
         contractAddress={contractAddress}
         contractABI={contractABI}
         account={account}
       />
-    </Container>
+    </Stack>
   );
 };
 
-export default Voting;
+export default VotingContainer;

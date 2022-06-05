@@ -2,14 +2,10 @@ export const themeOptions = {
   palette: {
     type: "light",
     primary: {
-      main: "#445fe8",
+      main: "#3f51b5",
     },
     secondary: {
       main: "#f50057",
-    },
-    background: {
-      paper: "#f7f1f1",
-      default: "#efeded",
     },
   },
   shape: {

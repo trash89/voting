@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Voting, SharedLayout, Error } from "./pages";
+import { VotingContainer, SharedLayout, Error } from "./pages";
 import { useIsMounted } from "./hooks";
 
 function App() {
@@ -10,8 +10,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<SharedLayout />}>
-            <Route index element={<Voting />} />
-            <Route exact path="/voting" element={<Voting />} />
+            <Route index element={<VotingContainer />} />
+            <Route exact path="/voting" element={<VotingContainer />} />
             <Route path="*" element={<Error />} />
           </Route>
         </Routes>

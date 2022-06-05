@@ -21,7 +21,7 @@ const GetVoter = ({ activeChain, contractAddress, contractABI, address }) => {
         direction="row"
         justifyContent="flex-start"
         alignItems="flex-start"
-        padding={1}
+        padding={0}
         spacing={1}
       >
         <Typography>Weight:{weight}</Typography>
@@ -46,7 +46,7 @@ const GetVoter = ({ activeChain, contractAddress, contractABI, address }) => {
           direction="row"
           justifyContent="flex-start"
           alignItems="flex-start"
-          padding={1}
+          padding={0}
           spacing={1}
         >
           <Typography>Delegated To {shortenAddress(delegate)}</Typography>
